@@ -1,30 +1,19 @@
-#!/bin/env python3.3
-
 from bs4 import BeautifulSoup
 import urllib2
+import re
 # import pprint
 
 data = {}
 
 def init_fetch(zipcode):
-	# Opens the source of the url and soupifies it	
+	# Opens the source of the url and soupifies it
+	# soup contains the source code of the page 
+	global soup
 	url = "http://www.uszip.com/zip/" + str(zipcode)	
 	url = urllib2.urlopen(url)
 	content = url.read()
 	soup = BeautifulSoup(content)
 	
-
-def listify(n):
-	"""
-	returns the food options for each category of food
-	eg: for "Comfort" it might return
-	     ["onion rings", "bread", "cheese"]
-	"""
-	raw = n.next_sibling.next_sibling.getText()
-	output_list = raw.split("\n")
-	output_list = [_f for _f in output_list if _f]
-	return output_list
-
 
 def get_city_state():
 	"""
@@ -36,47 +25,21 @@ def get_city_state():
 	return headers_raw[0].getText().split(",")
 
 def get_population_data():
-
-
-
-	# Creates master vegetarian dictionary
-	# all_dict = {}
-	# # For loop to create veg_dict
-	# for raw_header in headers_raw:
-	# 	header_title = raw_header.getText()
-	# 	temp = {}
-	# 	# "strong" finds all the categories
-	# 	for category in raw_header.next_sibling.findAll("strong"):
-	# 		categoryText = category.getText()
-	# 		temp[categoryText] = listify(category)
-	# 	all_dict[header_title] = temp
-	# return all_dict
-
-print get_city_state(48167)
-
-def get_veg_meals(url):
 	"""
-	Prints out a dictionary of all the vegetarian meals.
+	<dt>Land area<br><span class="stype">(sq. miles)</span></dt>
+	        <dd>17.78</dd>
 	"""
+	population = {}
+	population["total"] = soup.find("dt",text="Total population").next_sibling.contents[0]
+	population["housing_units"] = soup.find("dt",text="Housing units").next_sibling.contents[0]
+	# Note: land_area and water_area are in square miles
+	population["land_area"] = soup.find("dt",text=re.compile("Land area")).contents[0]
 
-	# Opens the source of the url and soupifies it
-	url = urllib.request.urlopen(url)
-	content = url.read()
-	soup = BeautifulSoup(content)
-	# Finds all tags with h4 (LUNCH, DINNER, etc)
-	headers_raw = soup.findAll("h4")
-	# Creates master vegetarian dictionary
-	veg_dict = {}
-	# For loop to create veg_dict
-	for raw_header in headers_raw:
-		header_title = raw_header.getText()
-		temp = {}
-		# "strong" finds all the categories
-		for category in raw_header.next_sibling.findAll("strong"):
-			categoryText = category.getText()
-			temp[categoryText] = veg_listify(category)
-		veg_dict[header_title] = temp
+	# for i in bob:
+		# print i.getText()
+	# population["water_area"] = soup.find("dt",text="Water area").next_sibling.contents[0]
+	return population
 
-# print all_dict
-# pp = pprint.PrettyPrinter(indent = 2)
-# pp.pprint(get_all_meals("http://cms.business-services.upenn.edu/dining/hours-locations-a-menus/residential-dining/hill-house/daily-menu.html"))
+init_fetch(48167)
+print get_city_state()
+print get_population_data()
